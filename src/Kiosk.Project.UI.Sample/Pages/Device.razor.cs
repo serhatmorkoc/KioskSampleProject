@@ -21,6 +21,8 @@ namespace Kiosk.Project.UI.Sample.Pages
 
         protected string Currency { get; set; }
 
+        protected string InfoText { get; set; }
+
         protected override async Task OnInitializedAsync()
         {
             await Task.Yield();
@@ -28,7 +30,8 @@ namespace Kiosk.Project.UI.Sample.Pages
             if (ValidateBillAcceptor())
             {
                 _NV_Manager.NoteReadEscrowed += NV_NoteReadEscrowed;
-                _NV_Manager.NoteCreditAccepted += NV_Manager_NoteCreditAccepted;
+                _NV_Manager.NoteCreditAccepted += NV_NoteCreditAccepted;
+                _NV_Manager.NoteStacked += NV_NoteStacked;
 
             }
 
@@ -36,16 +39,20 @@ namespace Kiosk.Project.UI.Sample.Pages
 
         private async void NV_NoteReadEscrowed(object sender, NV_NoteReadEscrowedEvent e)
         {
+            InfoText += "NOTE_IN_ESCROW\r\n";
+
             await InvokeAsync(() =>
             {
                 StateHasChanged();
             });
         }
 
-        private async void NV_Manager_NoteCreditAccepted(object sender, NV_NoteCreditAcceptedEvent e)
+        private async void NV_NoteCreditAccepted(object sender, NV_NoteCreditAcceptedEvent e)
         {
             NoteValue = e.Value / 100;
             Currency = new string(e.Currency);
+
+            InfoText += "POLL_CREDIT_NOTE\r\n";
 
             await InvokeAsync(() =>
             {
@@ -55,6 +62,8 @@ namespace Kiosk.Project.UI.Sample.Pages
 
         private async void NV_NoteStacked(object sender, NV_NoteStackedEvent e)
         {
+            InfoText += "POLL_NOTE_STACKED\r\n";
+
             await InvokeAsync(() =>
             {
                 StateHasChanged();
@@ -108,8 +117,9 @@ namespace Kiosk.Project.UI.Sample.Pages
 
             _NV_Manager.DisableValidator();
 
-            _NV_Manager.NoteReadEscrowed -= NV_NoteReadEscrowed;
-            _NV_Manager.NoteCreditAccepted -= NV_Manager_NoteCreditAccepted;
+            _NV_Manager.NoteReadEscrowed += NV_NoteReadEscrowed;
+            _NV_Manager.NoteCreditAccepted += NV_NoteCreditAccepted;
+            _NV_Manager.NoteStacked += NV_NoteStacked;
 
         }
     }
